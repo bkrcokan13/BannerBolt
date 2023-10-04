@@ -13,10 +13,20 @@ class Banner:
         self._search_url = "https://www.gumtree.com/search?search_category=all&q="
 
         self._categoriesUrl = []
+        self._advertlist = {
+            'for-sale':[],
+            'property':[],
+            'jobs':[],
+            'services':[],
+            'community':[],
+            'pets':[]
+        }
     
     def url_collect(self):
 
         data = None
+
+
 
         try:
             request_url = requests.get(self._base_url, headers=self._headers, timeout=1)
@@ -82,53 +92,85 @@ class Banner:
             print("Exception : Collect Products !")
             print(exception)
     
-
+    #/uk/page2
     def find_products(self, categories_url):
         try:
-            pageData = None
-
-            categoriesHeader = categories_url.split('/')[2]
-            print(categories_url.upper() + "\n")
-            try: 
-                productRequest = requests.get(
-                    categories_url,
-                    headers=self._headers
-                )
-
-                if productRequest.status_code == 200:
-                    pageData = productRequest.content
-                elif productRequest.status_code == 403:
-                    print("Status : Product page 403 Forbbiden ! ")
-                elif productRequest.status_code == 503:
-                    print("Status : Service Unavailable ! (NGINX)")
-            except requests.RequestException as reqExp:
-                print(reqExp)
+            print("\n")
             
+            # Url temp list 
+            urls = []
 
-            productSoup = BeautifulSoup(pageData, 'html.parser')
+            # Create Title
+            categoriesHeader = categories_url.split('/')
+            print(categoriesHeader[3] + "\n")
 
-            productsDiv = productSoup.find_all(
-                'div', attrs={
-                    'class':'css-pu9hbu e1j2ibpb1'
-                }
-            )
+            # Page count max 10 page
+            for pageCount in range(1, (10+1),1):
 
-            for divs in productsDiv:
-                hrefs = divs.find_all(
-                    'a', attrs={
-                        'class':'css-220ynt e1l3kmil19'
+                # Request advert page
+                try: 
+
+                    addedUrl = categories_url + f"/uk/page{pageCount}"
+
+                    productRequest = requests.get(
+                        addedUrl,
+                        headers=self._headers
+                    )
+
+                    if productRequest.status_code == 200:
+                        pageData = productRequest.content
+
+                    elif productRequest.status_code == 403:
+                        print("Status : Product page 403 Forbbiden ! ")
+
+                    elif productRequest.status_code == 503:
+                        print("Status : Service Unavailable ! (NGINX)")
+                except requests.RequestException as reqExp:
+                    print(reqExp)
+                
+                # Parse advert page
+                productSoup = BeautifulSoup(productRequest.content, 'html.parser')
+
+                productsDiv = productSoup.find_all(
+                    'div', attrs={
+                        'class':'css-pu9hbu e1j2ibpb1'
                     }
                 )
-                
 
-                for href in hrefs:
-                    print(href.get("href"))
+                for divs in productsDiv:
+                    hrefs = divs.find_all(
+                        'a', attrs={
+                            'class':'css-220ynt e1l3kmil19'
+                        }
+                    )
+                    
+                    for href in hrefs:
+                        
+                        urls.append(str(self._base_url+ href.get("href")))
 
+            # Added Dict Urls And Clear List
+            self._advertlist[str(categoriesHeader[3])] = urls
+
+            
+            
+            print(self._advertlist)
             print("\n")
-
+            urls.clear()     
 
         except Exception as exp:
             print(exp)
+    
+    def advert_title(self):
+        pass
+
+    def advert_price(self):
+        pass
+    
+    def advert_id(self):
+        pass
+    
+    def advert_img(self):
+        pass
 
 app = Banner()
 app.url_collect()
