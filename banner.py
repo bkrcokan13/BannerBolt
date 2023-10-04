@@ -1,6 +1,5 @@
-import requests
-import bs4
-import time
+import requests, time
+from bs4 import BeautifulSoup
 class Banner:
     def __init__(self):
         self._headers = {
@@ -38,7 +37,7 @@ class Banner:
 
             # Get Categories Url
 
-            url_soup = bs4.BeautifulSoup(data, 'html.parser')
+            url_soup = BeautifulSoup(data, 'html.parser')
 
             container =  url_soup.find_all(
                 'ul',attrs={
@@ -64,8 +63,72 @@ class Banner:
                         self._categoriesUrl.append(self._base_url + a.get("href"))
             
             print("Status: Url collected !")
+            print(self._categoriesUrl)
+
+            self.collect_products()
         except Exception as exception:
             print(exception)
+    
+    def collect_products(self):
+        try:
+            # Pop cars url
+            self._categoriesUrl.pop(0)
+
+            for url in self._categoriesUrl:
+                self.find_products(categories_url=url)
+
+            
+        except Exception as exception:
+            print("Exception : Collect Products !")
+            print(exception)
+    
+
+    def find_products(self, categories_url):
+        try:
+            pageData = None
+
+            categoriesHeader = categories_url.split('/')[2]
+            print(categories_url.upper() + "\n")
+            try: 
+                productRequest = requests.get(
+                    categories_url,
+                    headers=self._headers
+                )
+
+                if productRequest.status_code == 200:
+                    pageData = productRequest.content
+                elif productRequest.status_code == 403:
+                    print("Status : Product page 403 Forbbiden ! ")
+                elif productRequest.status_code == 503:
+                    print("Status : Service Unavailable ! (NGINX)")
+            except requests.RequestException as reqExp:
+                print(reqExp)
+            
+
+            productSoup = BeautifulSoup(pageData, 'html.parser')
+
+            productsDiv = productSoup.find_all(
+                'div', attrs={
+                    'class':'css-pu9hbu e1j2ibpb1'
+                }
+            )
+
+            for divs in productsDiv:
+                hrefs = divs.find_all(
+                    'a', attrs={
+                        'class':'css-220ynt e1l3kmil19'
+                    }
+                )
+                
+
+                for href in hrefs:
+                    print(href.get("href"))
+
+            print("\n")
+
+
+        except Exception as exp:
+            print(exp)
 
 app = Banner()
 app.url_collect()
