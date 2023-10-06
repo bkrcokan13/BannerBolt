@@ -12,7 +12,9 @@ class Banner:
         self._base_url = "https://www.gumtree.com"
         self._search_url = "https://www.gumtree.com/search?search_category=all&q="
 
-        self._categoriesUrl = []
+       
+        self._categories = {}
+
         self._advertlist = {
             'for-sale':[],
             'property':[],
@@ -70,22 +72,30 @@ class Banner:
                     )
 
                     for a in aData:
-                        self._categoriesUrl.append(self._base_url + a.get("href"))
-            
-            print("Status: Url collected !")
-            print(self._categoriesUrl)
 
-            self.collect_products()
+                        urlName = str(self._base_url + a.get("href")).split("/")
+
+                        # Pass car categories
+                        if urlName[3] == "cars-vans-motorbikes":
+                            pass
+                        else:
+                            self._categories[str(urlName[3])] = str(self._base_url + a.get("href"))
+        
+            print("Status: Url collected !")
+            print(self._categories)
+           
+            #self.collect_products()
         except Exception as exception:
             print(exception)
     
     def collect_products(self):
         try:
-            # Pop cars url
-            self._categoriesUrl.pop(0)
-
-            for url in self._categoriesUrl:
-                self.find_products(categories_url=url)
+           
+           for urls in list(self._categories.keys()):
+               self.find_products(
+                   categories_url=self._categories[urls],
+                   categories_name=urls
+               )
 
             
         except Exception as exception:
@@ -93,17 +103,10 @@ class Banner:
             print(exception)
     
     #/uk/page2
-    def find_products(self, categories_url):
+    def find_products(self, categories_url, categories_name):
         try:
-            print("\n")
-            
-            # Url temp list 
-            urls = []
 
-            # Create Title
-            categoriesHeader = categories_url.split('/')
-            print(categoriesHeader[3] + "\n")
-
+            print(f"CURRENT CATEGORIES : {categories_name}")
             # Page count max 10 page
             for pageCount in range(1, (10+1),1):
 
@@ -114,11 +117,12 @@ class Banner:
 
                     productRequest = requests.get(
                         addedUrl,
-                        headers=self._headers
+                        headers=self._headers,
+                        timeout=2
                     )
 
                     if productRequest.status_code == 200:
-                        pageData = productRequest.content
+                        print("Status : OK ! ")
 
                     elif productRequest.status_code == 403:
                         print("Status : Product page 403 Forbbiden ! ")
@@ -145,17 +149,13 @@ class Banner:
                     )
                     
                     for href in hrefs:
-                        
-                        urls.append(str(self._base_url+ href.get("href")))
+                        self._advertlist[categories_name].append(str(self._base_url+ href.get("href")))
 
-            # Added Dict Urls And Clear List
-            self._advertlist[str(categoriesHeader[3])] = urls
+                        print(str(self._base_url+ href.get("href")))
 
-            
-            
             print(self._advertlist)
             print("\n")
-            urls.clear()     
+           
 
         except Exception as exp:
             print(exp)
