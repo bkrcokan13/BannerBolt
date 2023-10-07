@@ -17,9 +17,9 @@ class Banner:
 
         self._advertlist = {
             'for-sale':[],
-            'property':[],
+            'flats-houses':[],
             'jobs':[],
-            'services':[],
+            'business-services':[],
             'community':[],
             'pets':[]
         }
@@ -84,20 +84,17 @@ class Banner:
             print("Status: Url collected !")
             print(self._categories)
            
-            #self.collect_products()
+            self.collect_products()
         except Exception as exception:
             print(exception)
     
     def collect_products(self):
         try:
            
-           for urls in list(self._categories.keys()):
-               self.find_products(
-                   categories_url=self._categories[urls],
-                   categories_name=urls
-               )
+            for urls in list(self._categories.keys()):
+               self.find_products(categories_url=self._categories[urls],categories_name=urls)
 
-            
+            print(self._advertlist)
         except Exception as exception:
             print("Exception : Collect Products !")
             print(exception)
@@ -108,7 +105,7 @@ class Banner:
 
             print(f"CURRENT CATEGORIES : {categories_name}")
             # Page count max 10 page
-            for pageCount in range(1, (10+1),1):
+            for pageCount in range(1, (2+1),1):
 
                 # Request advert page
                 try: 
@@ -151,11 +148,9 @@ class Banner:
                     for href in hrefs:
                         self._advertlist[categories_name].append(str(self._base_url+ href.get("href")))
 
-                        print(str(self._base_url+ href.get("href")))
+                        # print(str(self._base_url+ href.get("href")))
 
-            print(self._advertlist)
-            print("\n")
-           
+
 
         except Exception as exp:
             print(exp)
